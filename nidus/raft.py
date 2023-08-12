@@ -82,6 +82,7 @@ class RaftNode(Actor):
         self.get_lifetime = self.get_lifetime_metric if self.metric_based else self.get_lifetime_decrement
         self.lifetime_timer = None
         self.interval = int(network.config["interval"])
+        self.scale = int(network.config["scale"])
 
         self.node_id = node_id
         self.peers = peers
@@ -159,7 +160,7 @@ class RaftNode(Actor):
             if self.field not in delta:
                 raise ValueError("Field not found (%s)" % self.field)
             
-            value = delta[self.field]
+            value = delta[self.field] / self.scale
         
         return value
 
