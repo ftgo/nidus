@@ -4,7 +4,7 @@ sudo su
 
 echo "SUDO!"
 
-cd /home/ubuntu-lab/nidus
+cd /home/ubuntu-lab/Downloads/nidus
 
 rm -rf nidus_log
 
