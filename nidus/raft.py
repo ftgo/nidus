@@ -1,7 +1,8 @@
 import logging
 import os
 import random
-from threading import Timer
+from threading import Timer, Thread
+import time
 
 from nidus.actors import Actor, get_system
 from nidus.log import LogEntry
@@ -16,8 +17,21 @@ from nidus.messages import (
 )
 from nidus.state import RaftState
 
+from nidus.measurer import Measure
+
 logger = logging.getLogger("node_logger")
 
+SLOWHEARTBEAT = 0.02
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class RaftNetwork:
     """
@@ -58,19 +72,31 @@ class RaftNode(Actor):
     """
 
     def __init__(self, node_id, peers, network, state_machine):
+        
+        self.metric_based = bool(network.config["metric_based"])
+        self.field = network.config["metric"]
+        self.capacity = network.config["capacity"]
+        self.initial = random.uniform(network.config["initial"][0], network.config["initial"][1]) 
+        self.rate = network.config["rate"]
+        self.threshold = tuple(network.config["threshold"])
+        self.get_lifetime = self.get_lifetime_metric if self.metric_based else self.get_lifetime_decrement
+        self.lifetime_timer = None
+        self.total_lifetime = 0
+
         self.node_id = node_id
         self.peers = peers
         self.network = network
-        self.state = RaftState(self.network.config["storage_dir"], node_id)
+        self.state = RaftState(self.network.config["storage_dir"], node_id, self.initial)
         self.state_machine = state_machine
         self.heartbeat_interval = network.config["heartbeat_interval"]
         self.heartbeat_timer = None
         self.election_timer = None
         # dict of log_index: addr where log_index is the index a client is
-        # waiting to be commited
+        # waiting to be committed
         self.client_callbacks = {}
         self.leader_id = None
         self.restart_election_timer()
+        self.start_lifetime_timer()
 
     def handle_client_request(self, req):
         """
@@ -103,6 +129,39 @@ class RaftNode(Actor):
         # add client addr to callbacks so we can notify it of the result once
         # it's been commited
         self.client_callbacks[match_index] = tuple(req.sender)
+        # self.state.lifetime = self.get_lifetime()
+        print(f'{bcolors.WARNING} CURRENT LIFE TIME ({self.get_lifetime}): {self.state.lifetime}{bcolors.ENDC}')
+        # self.phase_behavior()
+    
+    def start_lifetime_timer(self):        
+        self.lifetime_timer = Thread(target=self.consuming_lifetime, daemon = True)
+        self.lifetime_timer.start()
+    
+        
+    def consuming_lifetime(self, op: bool=True, interval: int=15):
+        while op:
+            self.state.lifetime = self.get_lifetime()
+            
+            self.total_lifetime += self.state.lifetime
+            
+            self.log(f"Current Lifetime: {self.state.lifetime}")
+            time.sleep(interval)
+            
+    def get_lifetime_decrement(self) -> float:
+        return self.state.lifetime - 1
+
+    def get_lifetime_metric(self) -> float:
+        return self.measure_metric()
+
+    def measure_metric(self) -> float:
+        with Measure() as measure:
+            delta = measure.take_snapshot_delta()
+            if self.field not in delta:
+                raise ValueError("Field not found (%s)" % self.field)
+            
+            value = delta[self.field]
+        
+        return value
 
     def handle_append_entries_request(self, req):
         self.restart_election_timer()
@@ -372,4 +431,5 @@ class RaftNode(Actor):
     match_index: {self.state.match_index}
     next_index: {self.state.next_index}
     log:{self.state.log}
+    lifetime: {self.state.lifetime}
 >"""

@@ -10,7 +10,9 @@ class RaftState:
     CANDIDATE = "CANDIDATE"
     FOLLOWER = "FOLLOWER"
 
-    def __init__(self, storage_dir, node_id):
+    def __init__(self, storage_dir, node_id, lifetime: float):
+        self._lifetime = lifetime + 1 if node_id == "node-0" else lifetime
+
         self._storage_dir = storage_dir
         self._node_id = node_id
 
@@ -45,6 +47,14 @@ class RaftState:
         else:
             with open(vote_path, "wb+"):
                 pass
+
+    @property
+    def lifetime(self):
+        return self._lifetime
+    
+    @lifetime.setter
+    def lifetime(self, desired_lifetime):
+    	self._lifetime = desired_lifetime
 
     @property
     def current_term(self):
