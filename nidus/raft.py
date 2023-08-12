@@ -155,7 +155,7 @@ class RaftNode(Actor):
 
     def measure_metric(self) -> float:
         with Measure() as measure:
-            delta = measure.take_snapshot_delta()
+            delta = measure.take_snapshot()
             if self.field not in delta:
                 raise ValueError("Field not found (%s)" % self.field)
             
