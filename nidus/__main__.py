@@ -44,13 +44,13 @@ def main():
             print(res)
         actor_system.shutdown()
     else:
-        config = load_user_config(args.config)
-        net = RaftNetwork(config, KVStore)
-        nodes = [net.create_node(n) for n in args.name]
+        with Trace("nidus"):
+            config = load_user_config(args.config)
+            net = RaftNetwork(config, KVStore)
+            nodes = [net.create_node(n) for n in args.name]
 
-        return nodes
+            return nodes
 
 
 if __name__ == "__main__":
-    with Trace("nidus"):
         main()
