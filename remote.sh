@@ -16,4 +16,4 @@ sleep ${1}
 
 . /home/ubuntu-lab/Downloads/nidus/.venv/bin/activate
 
-python -m nidus --config=${2} ${3}
+python -m nidus --config=${2} ${3} 1>remote.log 2>&1
