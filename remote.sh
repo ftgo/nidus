@@ -8,6 +8,6 @@ cd /home/ubuntu-lab/Downloads/nidus
 
 rm -rf nidus_log
 
-sleep 0
+sleep ${1}
 
-python -m nidus --config=config.json node-0
+python -m nidus --config={$2} ${3}
