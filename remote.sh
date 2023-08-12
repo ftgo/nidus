@@ -1,21 +1,12 @@
 #!/bin/bash
 
-echo $1 $2 $3
+NIDUS_PATH=/home/ubuntu-lab/Downloads/nidus
+# NIDUS_PATH=/home/ftgo/repo/ftgo/nidus
 
-sudo su
-
-echo "SUDO!"
-
-cd /home/ubuntu-lab/Downloads/nidus
+cd ${NIDUS_PATH}
 
 rm -rf nidus_log
 
 sleep ${1}
 
-# make init
-
-export PATH="/home/ubuntu-lab/Downloads/nidus/.venv/bin:${PATH}"
-
-. /home/ubuntu-lab/Downloads/nidus/.venv/bin/activate
-
-python -m nidus --config=${2} ${3} 1>remote.log 2>&1
+sudo PATH="${NIDUS_PATH}/.venv/bin:${PATH}" python -m nidus --config=${2} ${3} 1>remote.log 2>&1
