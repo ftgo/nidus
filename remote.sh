@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo $1 $2 $3
+
 sudo su
 
 echo "SUDO!"
