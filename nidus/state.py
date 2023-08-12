@@ -11,8 +11,9 @@ class RaftState:
     FOLLOWER = "FOLLOWER"
 
     def __init__(self, storage_dir, node_id, lifetime: float):
-        self._lifetime = lifetime + 1 if node_id == "node-0" else lifetime
-
+        self._lifetime: float = lifetime + 1 if node_id == "node-0" else lifetime
+        self._total_lifetime: float = 0
+        
         self._storage_dir = storage_dir
         self._node_id = node_id
 
@@ -49,12 +50,17 @@ class RaftState:
                 pass
 
     @property
-    def lifetime(self):
+    def lifetime(self) -> float:
         return self._lifetime
     
     @lifetime.setter
-    def lifetime(self, desired_lifetime):
-    	self._lifetime = desired_lifetime
+    def lifetime(self, lifetime: float):
+        self._lifetime = lifetime
+        self._total_lifetime += lifetime
+
+    @property
+    def total_lifetime(self) -> float:
+        return self._total_lifetime
 
     @property
     def current_term(self):

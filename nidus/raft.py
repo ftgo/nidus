@@ -81,7 +81,7 @@ class RaftNode(Actor):
         self.threshold = tuple(network.config["threshold"])
         self.get_lifetime = self.get_lifetime_metric if self.metric_based else self.get_lifetime_decrement
         self.lifetime_timer = None
-        self.total_lifetime = 0
+        self.interval = int(network.config["interval"])
 
         self.node_id = node_id
         self.peers = peers
@@ -138,14 +138,14 @@ class RaftNode(Actor):
         self.lifetime_timer.start()
     
         
-    def consuming_lifetime(self, op: bool=True, interval: int=15):
-        while op:
+    def consuming_lifetime(self):
+        while True:
             self.state.lifetime = self.get_lifetime()
-            
-            self.total_lifetime += self.state.lifetime
-            
-            self.log(f"Current Lifetime: {self.state.lifetime}")
-            time.sleep(interval)
+
+            self.log(f"Current lifetime: {self.state.lifetime}")
+            self.log(f"Total lifetime: {self.state.total_lifetime}")
+
+            time.sleep(self.interval)
             
     def get_lifetime_decrement(self) -> float:
         return self.state.lifetime - 1
