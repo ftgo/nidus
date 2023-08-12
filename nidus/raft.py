@@ -120,7 +120,7 @@ class RaftNode(Actor):
         success = self.state.append_entries(prev_index, prev_term, entries)
         if not success:
             raise Exception("This shouldn't happen!")
-        self.log(f"append_entries success={success} entries={entries}")
+        # self.log(f"append_entries success={success} entries={entries}")
 
         # update leaders match/next index
         match_index = len(self.state.log) - 1
